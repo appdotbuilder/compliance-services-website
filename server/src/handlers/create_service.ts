@@ -1,11 +1,12 @@
+import { db } from '../db';
+import { servicesTable } from '../db/schema';
 import { type CreateServiceInput, type Service } from '../schema';
 
-export async function createService(input: CreateServiceInput): Promise<Service> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new compliance service and persisting it in the database.
-    // This allows for adding new service offerings beyond the core three services.
-    return Promise.resolve({
-        id: Math.floor(Math.random() * 1000), // Placeholder ID
+export const createService = async (input: CreateServiceInput): Promise<Service> => {
+  try {
+    // Insert service record
+    const result = await db.insert(servicesTable)
+      .values({
         slug: input.slug,
         name: input.name,
         title: input.title,
@@ -13,8 +14,15 @@ export async function createService(input: CreateServiceInput): Promise<Service>
         benefits: input.benefits,
         process_steps: input.process_steps,
         timeline: input.timeline,
-        pricing_info: input.pricing_info || null,
-        created_at: new Date(),
-        updated_at: new Date()
-    });
-}
+        pricing_info: input.pricing_info || null
+      })
+      .returning()
+      .execute();
+
+    const service = result[0];
+    return service;
+  } catch (error) {
+    console.error('Service creation failed:', error);
+    throw error;
+  }
+};
